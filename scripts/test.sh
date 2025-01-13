@@ -1,0 +1,18 @@
+python /home/work/VisionAI_Intern_Project/neg_clip/src/training/main.py \
+    --save-frequency 1 \
+    --dataset-type csv \
+    --zeroshot-frequency 1 \
+    --report-to wandb \
+    --train-data="/home/work/VisionAI_Intern_Project/neg_clip/src/training/example_dataset.csv"  \
+    --val-data="/home/work/VisionAI_Intern_Project/neg_clip/src/training/example_dataset.csv"  \
+    --csv-img-key image_path \
+    --csv-caption-key caption \
+    --csv-hard-captions-key neg_caption \
+    --csv-separator "," \
+    --warmup 10000 \
+    --batch-size=128 \
+    --lr=1e-3 \
+    --wd=0.1 \
+    --epochs=3 \
+    --workers=8 \
+    --model RN50
