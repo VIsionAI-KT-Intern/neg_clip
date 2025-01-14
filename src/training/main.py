@@ -29,7 +29,7 @@ from distributed import is_master, init_distributed_device, world_info_from_env
 from logger import setup_logging
 from params import parse_args
 from scheduler import cosine_lr
-from train import train_one_epoch_neg_text, train_one_epoch_neg_text_image, evaluate_neg_text_image, evaluate_neg_text
+from train import train_one_epoch_None_neg ,train_one_epoch_neg_text, train_one_epoch_neg_text_image, evaluate_None_neg, evaluate_neg_text_image, evaluate_neg_text
 
 
 def random_seed(seed=42, rank=0):
@@ -234,7 +234,7 @@ def main():
             args.val_sz = data["val"].dataloader.num_samples
         # you will have to configure this for your project!
         wandb.init(
-            project="neg_clip",
+            project="KT_VisionAI_Intern_Project",
             notes=args.wandb_notes,
             tags=[],
             config=vars(args),
@@ -249,6 +249,8 @@ def main():
             evaluate_neg_text_imaage(model, data, start_epoch, args, writer)
         elif args.neg_type == 'txt':
             evaluate_neg_text(model, data, start_epoch, args, writer)
+        elif args.neg_type == 'None':
+            evaluate_None_neg(model, data, start_epoch, args, writer)
         return
 
     for epoch in range(start_epoch, args.epochs):
@@ -258,6 +260,8 @@ def main():
             train_one_epoch_neg_text_image(model, data, epoch, optimizer, scaler, scheduler, args, writer)
         elif args.neg_type == 'txt':
             train_one_epoch_neg_text(model, data, epoch, optimizer, scaler, scheduler, args, writer)
+        elif args.neg_type == 'None':
+            train_one_epoch_None_neg(model, data, epoch, optimizer, scaler, scheduler, args, writer)
         completed_epoch = epoch + 1
 
         if any(v in data for v in ('val', 'imagenet-val', 'imagenet-v2')):
@@ -265,6 +269,8 @@ def main():
                 evaluate_neg_text_image(model, data, completed_epoch, args, writer)
             elif args.neg_type == 'txt':
                 evaluate_neg_text(model, data, completed_epoch, args, writer)
+            elif args.neg_type == 'None':
+                evaluate_None_neg(model, data, completed_epoch, args, writer)
 
 
         # Saving checkpoints.

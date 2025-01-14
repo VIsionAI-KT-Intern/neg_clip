@@ -38,7 +38,8 @@ class CsvDataset(Dataset):
         self.neg_type = args.neg_type
         self.images = df[img_key].tolist()
         self.captions = df[caption_key].tolist()
-        self.hard_captions = df[hard_captions_key].tolist()
+        if self.neg_type == "img_txt" or self.neg_type == "txt":
+            self.hard_captions = df[hard_captions_key].tolist()
         if self.neg_type == "img_txt":        
             self.hard_images = df["neg_image"].tolist()
         self.transforms = transforms
@@ -75,6 +76,11 @@ class CsvDataset(Dataset):
             hard_captions = tokenize([str(chosen_caption)])[0]
 
             return images, texts, hard_captions
+        elif self.neg_type == "None":
+            images = self.transforms(Image.open(str(self.images[idx])))
+            texts = tokenize([str(self.captions[idx])])[0]
+
+            return images, texts
 
 
 
@@ -494,3 +500,10 @@ def get_data(args, preprocess_fns, epoch=0):
         data["imagenet-v2"] = get_imagenet(args, preprocess_fns, "v2")
 
     return data
+
+
+
+def add_text_noise(args, text):
+    pass
+
+    return new_text

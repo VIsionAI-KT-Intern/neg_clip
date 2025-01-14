@@ -1,11 +1,11 @@
 python /home/work/VisionAI_Intern_Project/neg_clip/src/training/main.py \
     --save-frequency 1 \
     --dataset-type csv \
-    --neg-type txt \
+    --neg-type None \
     --zeroshot-frequency 1 \
     --report-to wandb \
-    --train-data="/home/work/cc_ocr/data_s/add_gt_train_hard_neg_text.csv"  \
-    --val-data="/home/work/cc_ocr/data_s/add_gt_val_hard_neg_text.csv"  \
+    --train-data="/home/work/VisionAI_Intern_Project/neg_clip/src/data/data_base_neg_only_text/100/train.csv"  \
+    --val-data="/home/work/VisionAI_Intern_Project/neg_clip/src/data/data_base_neg_only_text/100/val.csv"  \
     --csv-img-key image_path \
     --csv-caption-key caption \
     --csv-hard-captions-key neg_caption \
@@ -17,4 +17,4 @@ python /home/work/VisionAI_Intern_Project/neg_clip/src/training/main.py \
     --epochs=100 \
     --workers=4 \
     --model ViT-B-32 \
-    --wandb-notes "Training with Neg Text" \
+    --name "None-neg 1M csv"
