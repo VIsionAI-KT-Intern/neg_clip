@@ -14,9 +14,9 @@ try:
 except ImportError:
     wandb = None
 
-from open_clip import ClipLoss
-from .distributed import is_master
-from .zero_shot import zero_shot_eval
+from src.open_clip.loss import ClipLoss
+from distributed import is_master
+from zero_shot import zero_shot_eval
 
 
 class AverageMeter(object):
@@ -47,7 +47,6 @@ def unwrap_model(model):
 def train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, tb_writer=None):
     device = torch.device(args.device)
     autocast = torch.cuda.amp.autocast if args.precision == 'amp' else suppress
-
     model.train()
     loss = ClipLoss(
         local_loss=args.local_loss,
@@ -59,6 +58,8 @@ def train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, tb_w
 
     data['train'].set_epoch(epoch)  # set epoch in process safe manner via sampler or shared_epoch
     dataloader = data['train'].dataloader
+    # print(f"dataloader_train: {dataloader}, length of dataloader: {len(dataloader)}")
+
     num_batches_per_epoch = dataloader.num_batches
     sample_digits = math.ceil(math.log(dataloader.num_samples + 1, 10))
 
@@ -67,10 +68,18 @@ def train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, tb_w
     data_time_m = AverageMeter()
     end = time.time()
     for i, batch in enumerate(dataloader):
+        # print(f"dataloader _ {i}")
         step = num_batches_per_epoch * epoch + i
         scheduler(step)
-
+    
         images, new_images, texts, new_texts, hard_captions, new_hard = batch
+        # print(f"data shapes")
+        # print(f"images: {images.shape}")
+        # print(f"new_images: {new_images.shape}")
+        # print(f"texts: {texts.shape}")
+        # print(f"new_texts: {new_texts.shape}")
+        # print(f"hard_captions: {hard_captions.shape}")
+        # print(f"new_hard: {new_hard.shape}")
 
         images = images.to(device=device, non_blocking=True)
         new_images = new_images.to(device=device, non_blocking=True)
@@ -91,7 +100,16 @@ def train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, tb_w
         optimizer.zero_grad()
 
         with autocast():
+            # print(f"input shapes")
+            # print(f"images: {images.shape}")
+            # print(f"texts: {texts.shape}")
+
             image_features, text_features, logit_scale = model(images, texts)
+            # print(f"features shapes")
+            # print(f"image_features: {image_features.shape}")
+            # print(f"text_features: {text_features.shape}")
+            # print(f"logit_scale: {logit_scale.shape}")
+
             total_loss = loss(image_features, text_features, logit_scale)
 
         if scaler is not None:
@@ -122,8 +140,10 @@ def train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, tb_w
         batch_time_m.update(time.time() - end)
         end = time.time()
         batch_count = i + 1
+        
         if is_master(args) and (i % 100 == 0 or batch_count == num_batches_per_epoch):
             batch_size = len(images)
+            # print(f"batch_size: {batch_size}")
             num_samples = batch_count * batch_size * args.world_size
             samples_per_epoch = dataloader.num_samples
             percent_complete = 100.0 * batch_count / num_batches_per_epoch
@@ -156,7 +176,7 @@ def train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, tb_w
                 if args.wandb:
                     assert wandb is not None, 'Please install wandb.'
                     wandb.log({name: val, 'step': step})
-
+            # print(f"Train Epoch: {epoch} [{num_samples:>{sample_digits}}/{samples_per_epoch} ({percent_complete:.0f}%)] ")
             # resetting batch / data time meters per log window
             batch_time_m.reset()
             data_time_m.reset()

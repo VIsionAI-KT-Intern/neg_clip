@@ -1,4 +1,5 @@
 logs/
+src/data/
 wandb/
 models/
 features/
@@ -148,3 +149,8 @@ core.*
 
 # Allow
 !src/evaluation/misc/results_dbs/*
+
+
+#example dataset
+csv_dataset_test.ipynb
+example_dataset.csv

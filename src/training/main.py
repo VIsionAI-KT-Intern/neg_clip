@@ -24,12 +24,12 @@ except ImportError:
     hvd = None
 
 from open_clip import create_model_and_transforms, trace_model
-from training.data import get_data
-from training.distributed import is_master, init_distributed_device, world_info_from_env
-from training.logger import setup_logging
-from training.params import parse_args
-from training.scheduler import cosine_lr
-from training.train import train_one_epoch, evaluate
+from data import get_data
+from distributed import is_master, init_distributed_device, world_info_from_env
+from logger import setup_logging
+from params import parse_args
+from scheduler import cosine_lr
+from train import train_one_epoch, evaluate
 
 
 def random_seed(seed=42, rank=0):
@@ -234,7 +234,7 @@ def main():
             args.val_sz = data["val"].dataloader.num_samples
         # you will have to configure this for your project!
         wandb.init(
-            project="open-clip",
+            project="neg_clip",
             notes=args.wandb_notes,
             tags=[],
             config=vars(args),
@@ -251,7 +251,7 @@ def main():
     for epoch in range(start_epoch, args.epochs):
         if is_master(args):
             logging.info(f'Start epoch {epoch}')
-
+        
         train_one_epoch(model, data, epoch, optimizer, scaler, scheduler, args, writer)
         completed_epoch = epoch + 1
 

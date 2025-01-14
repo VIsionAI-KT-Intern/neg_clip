@@ -3,16 +3,16 @@ python /home/work/VisionAI_Intern_Project/neg_clip/src/training/main.py \
     --dataset-type csv \
     --zeroshot-frequency 1 \
     --report-to wandb \
-    --train-data="/home/work/VisionAI_Intern_Project/neg_clip/src/training/example_dataset.csv"  \
-    --val-data="/home/work/VisionAI_Intern_Project/neg_clip/src/training/example_dataset.csv"  \
+    --train-data="/home/work/cc_ocr/mini_csv/train_neg_base_with_image_1500.csv"  \
+    --val-data="/home/work/cc_ocr/mini_csv/val_neg_base_with_image_1500.csv"  \
     --csv-img-key image_path \
     --csv-caption-key caption \
     --csv-hard-captions-key neg_caption \
     --csv-separator "," \
     --warmup 10000 \
-    --batch-size=128 \
+    --batch-size=32 \
     --lr=1e-3 \
     --wd=0.1 \
-    --epochs=3 \
+    --epochs=10 \
     --workers=8 \
-    --model RN50
+    --model ViT-B-32 \

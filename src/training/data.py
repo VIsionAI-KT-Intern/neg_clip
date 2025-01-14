@@ -408,6 +408,7 @@ def get_wds_dataset(args, preprocess_img, is_train, epoch=0, floor=False):
 
 
 def get_csv_dataset(args, preprocess_fn, is_train, epoch=0):
+    # print(f"get_csv_dataset")
     input_filename = args.train_data if is_train else args.val_data
     assert input_filename
     dataset = CsvDataset(
@@ -417,6 +418,7 @@ def get_csv_dataset(args, preprocess_fn, is_train, epoch=0):
         caption_key=args.csv_caption_key,
         hard_captions_key=args.csv_hard_captions_key,
         sep=args.csv_separator)
+    # print(f"len dataset: {len(dataset)}")
     num_samples = len(dataset)
     sampler = DistributedSampler(dataset) if args.distributed and is_train else None
     shuffle = is_train and sampler is None
@@ -432,6 +434,7 @@ def get_csv_dataset(args, preprocess_fn, is_train, epoch=0):
     )
     dataloader.num_samples = num_samples
     dataloader.num_batches = len(dataloader)
+    # print(f" dataloader num samples: {dataloader.num_samples}")
 
     return DataInfo(dataloader, sampler)
 
@@ -455,16 +458,19 @@ def get_dataset_fn(data_path, dataset_type):
     
 
 def get_data(args, preprocess_fns, epoch=0):
+    # print(f"get_data")
     preprocess_train, preprocess_val = preprocess_fns
     data = {}
 
     if args.train_data:
         data["train"] = get_dataset_fn(args.train_data, args.dataset_type)(
             args, preprocess_train, is_train=True, epoch=epoch)
+        # print(f"train data: {data['train'].dataloader.num_samples}, len(data['train'].dataloader): {len(data['train'].dataloader)}")
 
     if args.val_data:
         data["val"] = get_dataset_fn(args.val_data, args.dataset_type)(
             args, preprocess_val, is_train=False)
+        # print(f"val data: {data['val'].dataloader.num_samples}, len(data['val'].dataloader): {len(data['val'].dataloader)}")
 
     if args.imagenet_val is not None:
         data["imagenet-val"] = get_imagenet(args, preprocess_fns, "val")
