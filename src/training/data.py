@@ -31,36 +31,50 @@ from open_clip import tokenize
 
 
 class CsvDataset(Dataset):
-    def __init__(self, input_filename, transforms, img_key, caption_key, hard_captions_key, sep="\t"):
+    def __init__(self, input_filename, transforms, img_key, caption_key, hard_captions_key, sep="\t", args="img_txt"):
         logging.debug(f'Loading csv data from {input_filename}.')
         df = pd.read_csv(input_filename, sep=sep, converters={"neg_caption":ast.literal_eval, "neg_image":ast.literal_eval})
 
+        self.neg_type = args.neg_type
         self.images = df[img_key].tolist()
         self.captions = df[caption_key].tolist()
         self.hard_captions = df[hard_captions_key].tolist()
-        self.hard_images = df["neg_image"].tolist()
+        if self.neg_type == "img_txt":        
+            self.hard_images = df["neg_image"].tolist()
         self.transforms = transforms
+        
         logging.debug('Done loading data.')
+
 
     def __len__(self):
         return len(self.captions)
 
     def __getitem__(self, idx):
-        images = self.transforms(Image.open(str(self.images[idx])))
-        texts = tokenize([str(self.captions[idx])])[0]
+        if self.neg_type == "img_txt":
 
-        chosen_caption = random.choice(self.hard_captions[idx])
-        hard_captions = tokenize([str(chosen_caption)])[0]
+            images = self.transforms(Image.open(str(self.images[idx])))
+            texts = tokenize([str(self.captions[idx])])[0]
 
-        chose_image_index = random.choice(self.hard_images[idx])
+            chosen_caption = random.choice(self.hard_captions[idx])
+            hard_captions = tokenize([str(chosen_caption)])[0]
 
-        new_images = self.transforms(Image.open(str(self.images[chose_image_index])))
-        new_texts = tokenize([str(self.captions[chose_image_index])])[0]
+            chose_image_index = random.choice(self.hard_images[idx])
 
-        chosen_caption = random.choice(self.hard_captions[chose_image_index])
-        new_hard = tokenize([str(chosen_caption)])[0]
+            new_images = self.transforms(Image.open(str(self.images[chose_image_index])))
+            new_texts = tokenize([str(self.captions[chose_image_index])])[0]
 
-        return images, new_images, texts, new_texts, hard_captions, new_hard
+            chosen_caption = random.choice(self.hard_captions[chose_image_index])
+            new_hard = tokenize([str(chosen_caption)])[0]
+
+            return images, new_images, texts, new_texts, hard_captions, new_hard
+        elif self.neg_type == "txt":
+            images = self.transforms(Image.open(str(self.images[idx])))
+            texts = tokenize([str(self.captions[idx])])[0]
+
+            chosen_caption = random.choice(self.hard_captions[idx])
+            hard_captions = tokenize([str(chosen_caption)])[0]
+
+            return images, texts, hard_captions
 
 
 
@@ -417,7 +431,8 @@ def get_csv_dataset(args, preprocess_fn, is_train, epoch=0):
         img_key=args.csv_img_key,
         caption_key=args.csv_caption_key,
         hard_captions_key=args.csv_hard_captions_key,
-        sep=args.csv_separator)
+        sep=args.csv_separator,
+        args = args)
     # print(f"len dataset: {len(dataset)}")
     num_samples = len(dataset)
     sampler = DistributedSampler(dataset) if args.distributed and is_train else None

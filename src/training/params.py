@@ -43,6 +43,11 @@ def parse_args():
         help="Which type of dataset to process."
     )
     parser.add_argument(
+        "--neg-type",
+        choices=["txt", 'img', "img_txt", "None"],
+        default="img_txt"
+    )
+    parser.add_argument(
         "--dataset-resampled",
         default=False,
         action="store_true",
