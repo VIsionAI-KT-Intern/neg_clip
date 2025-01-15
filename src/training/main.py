@@ -31,6 +31,12 @@ from params import parse_args
 from scheduler import cosine_lr
 from train import train_one_epoch_None_neg ,train_one_epoch_neg_text, train_one_epoch_neg_text_image, evaluate_None_neg, evaluate_neg_text_image, evaluate_neg_text
 
+from PIL import Image
+Image.MAX_IMAGE_PIXELS = None
+
+import warnings
+warnings.filterwarnings(action='ignore')
+
 
 def random_seed(seed=42, rank=0):
     torch.manual_seed(seed + rank)
@@ -246,11 +252,11 @@ def main():
 
     if 'train' not in data:
         if args.neg_type == 'img_txt':
-            evaluate_neg_text_imaage(model, data, start_epoch, args, writer)
+            val_metric = evaluate_neg_text_imaage(model, data, start_epoch, args, writer)
         elif args.neg_type == 'txt':
-            evaluate_neg_text(model, data, start_epoch, args, writer)
+            val_metric = evaluate_neg_text(model, data, start_epoch, args, writer)
         elif args.neg_type == 'None':
-            evaluate_None_neg(model, data, start_epoch, args, writer)
+            val_metric = evaluate_None_neg(model, data, start_epoch, args, writer)
         return
 
     for epoch in range(start_epoch, args.epochs):
@@ -266,11 +272,11 @@ def main():
 
         if any(v in data for v in ('val', 'imagenet-val', 'imagenet-v2')):
             if args.neg_type == 'img_txt':
-                evaluate_neg_text_image(model, data, completed_epoch, args, writer)
+                val_metric = evaluate_neg_text_image(model, data, completed_epoch, args, writer)
             elif args.neg_type == 'txt':
-                evaluate_neg_text(model, data, completed_epoch, args, writer)
+                val_metric = evaluate_neg_text(model, data, completed_epoch, args, writer)
             elif args.neg_type == 'None':
-                evaluate_None_neg(model, data, completed_epoch, args, writer)
+                val_metric = evaluate_None_neg(model, data, completed_epoch, args, writer)
 
 
         # Saving checkpoints.
@@ -284,14 +290,22 @@ def main():
             if scaler is not None:
                 checkpoint_dict["scaler"] = scaler.state_dict()
 
-            if completed_epoch == args.epochs or (
-                args.save_frequency > 0 and (completed_epoch % args.save_frequency) == 0
-            ):
+            # Save best model based on validation loss
+            if completed_epoch == 1:
+                best_val_loss = val_metric['val_loss']
                 torch.save(
                     checkpoint_dict,
-                    os.path.join(args.checkpoint_path, f"epoch_{completed_epoch}.pt"),
+                    os.path.join(args.checkpoint_path, "best_model.pt"),
                 )
-            if args.save_most_recent:
+            else:
+                if val_metric < best_val_loss:
+                    best_val_loss = val_metric['val_loss']
+                    torch.save(
+                        checkpoint_dict,
+                        os.path.join(args.checkpoint_path, "best_model.pt"),
+                    )
+
+            if args.save_most_recent: 
                 torch.save(
                     checkpoint_dict,
                     os.path.join(args.checkpoint_path, f"epoch_latest.pt"),

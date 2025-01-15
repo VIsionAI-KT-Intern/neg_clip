@@ -257,12 +257,6 @@ def parse_args():
         help="Notes if logging with wandb"
     )
     parser.add_argument(
-        "--wandb-name",
-        default='',
-        type=str,
-        help="Name if logging with wandb"
-    )
-    parser.add_argument(
         "--debug",
         default=False,
         action="store_true",
