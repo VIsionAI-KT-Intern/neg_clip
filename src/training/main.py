@@ -298,7 +298,7 @@ def main():
                     os.path.join(args.checkpoint_path, "best_model.pt"),
                 )
             else:
-                if val_metric < best_val_loss:
+                if val_metric['val_loss'] < best_val_loss:
                     best_val_loss = val_metric['val_loss']
                     torch.save(
                         checkpoint_dict,
