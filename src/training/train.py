@@ -150,7 +150,7 @@ def train_one_epoch_None_neg(model, data, epoch, optimizer, scaler, scheduler, a
                     tb_writer.add_scalar(name, val, step)
                 if args.wandb:
                     assert wandb is not None, 'Please install wandb.'
-                    wandb.log({name: val, 'step': step})
+                    wandb.log({name: val, 'epoch': epoch})
             # resetting batch / data time meters per log window
             batch_time_m.reset()
             data_time_m.reset()
@@ -290,7 +290,7 @@ def train_one_epoch_neg_text_image(model, data, epoch, optimizer, scaler, schedu
                     tb_writer.add_scalar(name, val, step)
                 if args.wandb:
                     assert wandb is not None, 'Please install wandb.'
-                    wandb.log({name: val, 'step': step})
+                    wandb.log({name: val, 'epoch': epoch})
             # print(f"Train Epoch: {epoch} [{num_samples:>{sample_digits}}/{samples_per_epoch} ({percent_complete:.0f}%)] ")
             # resetting batch / data time meters per log window
             batch_time_m.reset()
@@ -421,7 +421,7 @@ def train_one_epoch_neg_text(model, data, epoch, optimizer, scaler, scheduler, a
                     tb_writer.add_scalar(name, val, step)
                 if args.wandb:
                     assert wandb is not None, 'Please install wandb.'
-                    wandb.log({name: val, 'step': step})
+                    wandb.log({name: val, 'epoch': epoch})
             # print(f"Train Epoch: {epoch} [{num_samples:>{sample_digits}}/{samples_per_epoch} ({percent_complete:.0f}%)] ")
             # resetting batch / data time meters per log window
             batch_time_m.reset()
@@ -435,8 +435,8 @@ def evaluate_None_neg(model, data, epoch, args, tb_writer=None):
     device = torch.device(args.device)
     model.eval()
 
-    zero_shot_metrics = zero_shot_eval(model, data, epoch, args)
-    metrics.update(zero_shot_metrics)
+    # zero_shot_metrics = zero_shot_eval(model, data, epoch, args)
+    # metrics.update(zero_shot_metrics)
 
     autocast = torch.cuda.amp.autocast if args.precision == 'amp' else suppress
     if 'val' in data and (args.val_frequency and ((epoch % args.val_frequency) == 0 or epoch == args.epochs)):
@@ -481,16 +481,21 @@ def evaluate_None_neg(model, data, epoch, args, tb_writer=None):
                         f"Eval Epoch: {epoch} [{num_samples} / {samples_per_val}]\t"
                         f"Loss: {cumulative_loss / num_samples:.6f}\t")
 
-            val_metrics = get_metrics(
-                image_features=torch.cat(all_image_features),
-                text_features=torch.cat(all_text_features),
-                logit_scale=logit_scale.cpu(),
-            )
+            # val_metrics = get_metrics(
+            #     image_features=torch.cat(all_image_features),
+            #     text_features=torch.cat(all_text_features),
+            #     logit_scale=logit_scale.cpu(),
+            # ) 
+        
             loss = cumulative_loss / num_samples
+            # metrics.update(
+            #     {**val_metrics, "val_loss": loss.item(), "epoch": epoch, "num_samples": num_samples}
+            # )
             metrics.update(
-                {**val_metrics, "val_loss": loss.item(), "epoch": epoch, "num_samples": num_samples}
+                {"val_loss": loss.item(), "epoch": epoch, "num_samples": num_samples}
             )
 
+  
     if not metrics:
         return metrics
 
@@ -522,8 +527,8 @@ def evaluate_neg_text_image(model, data, epoch, args, tb_writer=None):
     device = torch.device(args.device)
     model.eval()
 
-    zero_shot_metrics = zero_shot_eval(model, data, epoch, args)
-    metrics.update(zero_shot_metrics)
+    # zero_shot_metrics = zero_shot_eval(model, data, epoch, args)
+    # metrics.update(zero_shot_metrics)
 
     autocast = torch.cuda.amp.autocast if args.precision == 'amp' else suppress
     if 'val' in data and (args.val_frequency and ((epoch % args.val_frequency) == 0 or epoch == args.epochs)):
@@ -580,15 +585,20 @@ def evaluate_neg_text_image(model, data, epoch, args, tb_writer=None):
                         f"Eval Epoch: {epoch} [{num_samples} / {samples_per_val}]\t"
                         f"Loss: {cumulative_loss / num_samples:.6f}\t")
 
-            val_metrics = get_metrics(
-                image_features=torch.cat(all_image_features),
-                text_features=torch.cat(all_text_features),
-                logit_scale=logit_scale.cpu(),
-            )
+            # val_metrics = get_metrics(
+            #     image_features=torch.cat(all_image_features),
+            #     text_features=torch.cat(all_text_features),
+            #     logit_scale=logit_scale.cpu(),
+            # )
+        
             loss = cumulative_loss / num_samples
+            # metrics.update(
+            #     {**val_metrics, "val_loss": loss.item(), "epoch": epoch, "num_samples": num_samples}
+            # )
             metrics.update(
-                {**val_metrics, "val_loss": loss.item(), "epoch": epoch, "num_samples": num_samples}
+                {"val_loss": loss.item(), "epoch": epoch, "num_samples": num_samples}
             )
+
 
     if not metrics:
         return metrics
@@ -623,8 +633,8 @@ def evaluate_neg_text(model, data, epoch, args, tb_writer=None):
     device = torch.device(args.device)
     model.eval()
 
-    zero_shot_metrics = zero_shot_eval(model, data, epoch, args)
-    metrics.update(zero_shot_metrics)
+    # zero_shot_metrics = zero_shot_eval(model, data, epoch, args)
+    # metrics.update(zero_shot_metrics)
 
     autocast = torch.cuda.amp.autocast if args.precision == 'amp' else suppress
     if 'val' in data and (args.val_frequency and ((epoch % args.val_frequency) == 0 or epoch == args.epochs)):
@@ -672,15 +682,21 @@ def evaluate_neg_text(model, data, epoch, args, tb_writer=None):
                         f"Eval Epoch: {epoch} [{num_samples} / {samples_per_val}]\t"
                         f"Loss: {cumulative_loss / num_samples:.6f}\t")
 
-            val_metrics = get_metrics(
-                image_features=torch.cat(all_image_features),
-                text_features=torch.cat(all_text_features),
-                logit_scale=logit_scale.cpu(),
-            )
+            #   val_metrics = get_metrics(
+            #     image_features=torch.cat(all_image_features),
+            #     text_features=torch.cat(all_text_features),
+            #     logit_scale=logit_scale.cpu(),
+            # )
+        
             loss = cumulative_loss / num_samples
+            # metrics.update(
+            #     {**val_metrics, "val_loss": loss.item(), "epoch": epoch, "num_samples": num_samples}
+            # )
             metrics.update(
-                {**val_metrics, "val_loss": loss.item(), "epoch": epoch, "num_samples": num_samples}
+                {"val_loss": loss.item(), "epoch": epoch, "num_samples": num_samples}
             )
+
+            
 
     if not metrics:
         return metrics
